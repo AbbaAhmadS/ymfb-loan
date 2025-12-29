@@ -29,8 +29,8 @@ interface AuthProviderProps {
 const mockUsers: (User & { password: string })[] = [
   {
     id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
+    name: 'Aliyu Ibrahim',
+    email: 'aliyu@example.com',
     phone: '08012345678',
     role: 'applicant',
     password: 'password123',
