@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Logo from './Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
 
 const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -57,7 +56,7 @@ const Header: React.FC = () => {
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  {user.name}
+                  {profile?.full_name || 'Dashboard'}
                 </Button>
               </Link>
               <Button variant="outline" size="sm" onClick={logout} className="gap-2">
@@ -117,7 +116,7 @@ const Header: React.FC = () => {
                   <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="ghost" className="w-full justify-start gap-2">
                       <User className="h-4 w-4" />
-                      {user.name}
+                      {profile?.full_name || 'Dashboard'}
                     </Button>
                   </Link>
                   <Button variant="outline" onClick={() => { logout(); setMobileMenuOpen(false); }} className="w-full gap-2">

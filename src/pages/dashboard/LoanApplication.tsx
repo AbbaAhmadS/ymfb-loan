@@ -24,7 +24,7 @@ import {
   CreditCard,
   Loader2
 } from 'lucide-react';
-import { ApplicationType, AccountType, LoanPurpose } from '@/types';
+import { ApplicationType, AccountType } from '@/types';
 
 type Step = 'personal' | 'loan' | 'guarantor' | 'review';
 
@@ -65,7 +65,7 @@ const LoanApplication: React.FC = () => {
     accountType: '' as AccountType | '',
     accountBalance: '',
     dateOpened: '',
-    purpose: '' as LoanPurpose | '',
+    purpose: '' as 'medical' | 'consumption' | 'investment' | 'education' | 'others' | '',
     acceptedTerms: false,
     
     // Guarantor

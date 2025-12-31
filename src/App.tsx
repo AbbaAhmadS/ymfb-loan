@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 // User dashboard
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -24,12 +26,9 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ 
-  children, 
-  allowedRoles = ['applicant'] 
-}) => {
-  const { user, isLoading } = useAuth();
+// Protected Route Component for regular users
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading, isAdmin } = useAuth();
   
   if (isLoading) {
     return (
@@ -43,16 +42,20 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: strin
     return <Navigate to="/login" replace />;
   }
   
-  if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+  // If user is admin, redirect to admin dashboard
+  if (isAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
   
   return <>{children}</>;
 };
 
 // Admin Route Component
-const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
+const AdminRoute: React.FC<{ 
+  children: React.ReactNode; 
+  allowedRoles?: ('credit' | 'audit' | 'coo' | 'operations' | 'md')[];
+}> = ({ children, allowedRoles }) => {
+  const { user, isLoading, adminRole } = useAuth();
   
   if (isLoading) {
     return (
@@ -62,8 +65,35 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   }
   
-  if (!user || (user.role !== 'credit' && user.role !== 'audit')) {
+  if (!user || !adminRole) {
     return <Navigate to="/admin/login" replace />;
+  }
+  
+  // Check if user has required role
+  if (allowedRoles && !allowedRoles.includes(adminRole)) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Public Route - redirect authenticated users
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading, isAdmin } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+  
+  if (user) {
+    if (isAdmin) {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -73,8 +103,24 @@ const AppRoutes = () => (
   <Routes>
     {/* Public Routes */}
     <Route path="/" element={<Index />} />
-    <Route path="/login" element={<Login />} />
-    <Route path="/signup" element={<Signup />} />
+    <Route path="/about" element={<About />} />
+    <Route path="/contact" element={<Contact />} />
+    <Route 
+      path="/login" 
+      element={
+        <PublicRoute>
+          <Login />
+        </PublicRoute>
+      } 
+    />
+    <Route 
+      path="/signup" 
+      element={
+        <PublicRoute>
+          <Signup />
+        </PublicRoute>
+      } 
+    />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     
     {/* Protected User Routes */}

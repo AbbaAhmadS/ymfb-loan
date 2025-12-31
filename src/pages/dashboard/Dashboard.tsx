@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   // Mock application data
   const applications = [
@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
           {/* Welcome Section */}
           <div className="mb-8 animate-fade-in">
             <h1 className="font-serif text-3xl font-bold text-foreground mb-2">
-              Welcome, {user?.name}!
+              Welcome, {profile?.full_name || 'User'}!
             </h1>
             <p className="text-muted-foreground">
               Manage your loan applications and account from here.

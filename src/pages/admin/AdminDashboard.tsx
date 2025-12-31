@@ -88,13 +88,16 @@ const mockApplications = [
 ];
 
 const AdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, adminRole, logout } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const isAudit = user?.role === 'audit';
-  const isCredit = user?.role === 'credit';
+  const isAudit = adminRole === 'audit';
+  const isCredit = adminRole === 'credit';
+  const isCOO = adminRole === 'coo';
+  const isOperations = adminRole === 'operations';
+  const isMD = adminRole === 'md';
 
   const stats = [
     {
@@ -181,11 +184,11 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg">
               <Badge variant="secondary" className="capitalize">
-                {user?.role} Department
+                {adminRole} Department
               </Badge>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium hidden md:block">{user?.name}</span>
+              <span className="text-sm font-medium hidden md:block">{profile?.full_name}</span>
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>
