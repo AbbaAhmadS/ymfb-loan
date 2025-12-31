@@ -7,6 +7,18 @@ import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { z } from 'zod';
+
+const signupSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  phone: z.string().regex(/^0[789][01]\d{8}$/, 'Please enter a valid Nigerian phone number'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -21,62 +33,59 @@ const Signup: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
-  const validateForm = () => {
-    if (!formData.name || !formData.phone || !formData.email || !formData.password || !formData.confirmPassword) {
-      toast.error('Please fill in all fields');
+  const validateForm = (): boolean => {
+    try {
+      signupSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
       return false;
     }
-
-    if (formData.password.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast.error('Please enter a valid email address');
-      return false;
-    }
-
-    const phoneRegex = /^0[789][01]\d{8}$/;
-    if (!phoneRegex.test(formData.phone)) {
-      toast.error('Please enter a valid Nigerian phone number');
-      return false;
-    }
-
-    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
+      return;
+    }
 
-    const success = await signup(
+    const result = await signup(
       formData.name,
       formData.phone,
       formData.email,
       formData.password
     );
     
-    if (success) {
+    if (result.success) {
       toast.success('Account created successfully!');
       navigate('/dashboard');
     } else {
-      toast.error('An account with this email or phone already exists');
+      toast.error(result.error || 'Failed to create account');
     }
   };
 
@@ -104,8 +113,9 @@ const Signup: React.FC = () => {
                   placeholder="Enter your full name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="h-12"
+                  className={`h-12 ${errors.name ? 'border-destructive' : ''}`}
                 />
+                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
               </div>
 
               <div className="space-y-2">
@@ -117,8 +127,9 @@ const Signup: React.FC = () => {
                   placeholder="e.g., 08012345678"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="h-12"
+                  className={`h-12 ${errors.phone ? 'border-destructive' : ''}`}
                 />
+                {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
               </div>
 
               <div className="space-y-2">
@@ -130,8 +141,9 @@ const Signup: React.FC = () => {
                   placeholder="Enter your email address"
                   value={formData.email}
                   onChange={handleChange}
-                  className="h-12"
+                  className={`h-12 ${errors.email ? 'border-destructive' : ''}`}
                 />
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
@@ -144,7 +156,7 @@ const Signup: React.FC = () => {
                     placeholder="Create a password (min. 8 characters)"
                     value={formData.password}
                     onChange={handleChange}
-                    className="h-12 pr-10"
+                    className={`h-12 pr-10 ${errors.password ? 'border-destructive' : ''}`}
                   />
                   <button
                     type="button"
@@ -154,6 +166,7 @@ const Signup: React.FC = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
 
               <div className="space-y-2">
@@ -166,7 +179,7 @@ const Signup: React.FC = () => {
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="h-12 pr-10"
+                    className={`h-12 pr-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
                   />
                   <button
                     type="button"
@@ -176,6 +189,7 @@ const Signup: React.FC = () => {
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
               </div>
 
               <Button 

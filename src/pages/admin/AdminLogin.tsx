@@ -17,7 +17,7 @@ const AdminLogin: React.FC = () => {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [attempts, setAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -34,24 +34,20 @@ const AdminLogin: React.FC = () => {
       return;
     }
 
-    const success = await loginAdmin(formData.phone, formData.password);
+    const result = await loginAdmin(formData.phone, formData.password);
     
-    if (success) {
+    if (result.success) {
       toast.success('Welcome, Admin!');
       navigate('/admin/dashboard');
     } else {
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      
-      if (newAttempts >= 6) {
-        toast.error('Too many failed attempts. Please contact the developer.');
-      } else {
-        toast.error(`Invalid credentials. ${6 - newAttempts} attempts remaining.`);
+      if (result.locked) {
+        setIsLocked(true);
       }
+      toast.error(result.error || 'Invalid credentials');
     }
   };
 
-  if (attempts >= 6) {
+  if (isLocked) {
     return (
       <MainLayout showFooter={false}>
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">

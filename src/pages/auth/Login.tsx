@@ -33,13 +33,13 @@ const Login: React.FC = () => {
       return;
     }
 
-    const success = await login(formData.emailOrPhone, formData.password);
+    const result = await login(formData.emailOrPhone, formData.password);
     
-    if (success) {
+    if (result.success) {
       toast.success('Welcome back!');
       navigate('/dashboard');
     } else {
-      toast.error('Invalid credentials. Please try again.');
+      toast.error(result.error || 'Invalid credentials. Please try again.');
     }
   };
 
